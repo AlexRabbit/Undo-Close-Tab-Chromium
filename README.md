@@ -20,7 +20,6 @@
 | Feature | Description |
 |--------|--------------|
 | **🖱️ Left-click** | Opens a popup with **Restore last closed tab** and a list of recently closed tabs. |
-| **🖱️ Right-click** | Context menu with the same list — pick any tab to restore. |
 | **📋 Up to 25 tabs** | See and restore from the last 25 closed tabs (configurable). |
 | **⚙️ Options** | Filter by current window, tab groups, and where the menu appears. |
 
@@ -34,18 +33,10 @@ Works the same in all Chromium-based browsers. **Developer mode** must be on so 
 
 ### 1. Get the extension
 
-**Option A — From GitHub (recommended)**  
+**From GitHub (recommended)**  
 - Click the green **Code** button → **Download ZIP**.  
 - Unzip somewhere (e.g. `Downloads/undoclosetab-brave`).
 
-**Option B — Clone**
-
-```bash
-git clone https://github.com/YOUR_USERNAME/undoclosetab-brave.git
-cd undoclosetab-brave
-```
-
-Replace `YOUR_USERNAME` with the repo owner (e.g. your GitHub username).
 
 ---
 
@@ -68,7 +59,6 @@ After loading, the **Undo Close Tab** icon should appear in the toolbar (you may
 ### 3. Use it
 
 - **Left-click** the icon → popup with “Restore last closed tab” and the list.  
-- **Right-click** the icon → same list in a context menu.  
 - **Options**: Right-click the icon → **Options**, or open the extension card and click **Extension options**.
 
 ---
@@ -95,13 +85,6 @@ After loading, the **Undo Close Tab** icon should appear in the toolbar (you may
 | **Microsoft Edge** | ✅ Compatible |
 | **Vivaldi, Chromium, etc.** | ✅ Should work on any Chromium-based browser |
 
----
-
-## 📜 Differences from the Firefox version
-
-- **Popup on click** — Left-click opens a popup (Chromium doesn’t support “no popup + click” the same way).  
-- **Clear list** — Chromium’s `sessions` API doesn’t support “forget closed tab,” so “Clear list” has no effect.  
-- **Context menu** — Menu is built when sessions change, not when you open it, so it can be a moment out of date.
 
 ---
 
@@ -124,28 +107,3 @@ Licensed under **GPL-3.0** in line with the original project.
 
 ---
 
-## 🚀 Publish this repo to your GitHub
-
-If you cloned or downloaded this and want it under **your** GitHub account:
-
-1. **Create a new repo on GitHub**  
-   - Go to [github.com/new](https://github.com/new).  
-   - Name it e.g. `undoclosetab-brave`.  
-   - Do **not** add a README, .gitignore, or license (this repo already has them).  
-   - Create the repository.
-
-2. **In this folder, run:**
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: Undo Close Tab for Chromium (Brave, Chrome, Opera, Edge)"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/undoclosetab-brave.git
-git push -u origin main
-```
-
-Replace `YOUR_USERNAME` with your GitHub username.  
-If you use SSH: `git@github.com:YOUR_USERNAME/undoclosetab-brave.git`.
-
-**No Git?** Create the repo on GitHub, then use **Upload files** / **Add file → upload files** and drag this folder’s contents into the repo.
