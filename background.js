@@ -1,217 +1,168 @@
 /*
-    Firefox addon "Undo Close Tab"
-    Copyright (C) 2020  Manuel Reimer <manuel.reimer@gmx.de>
-    Copyright (C) 2017  YFdyh000 <yfdyh000@gmail.com>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  Undo Close Tab - Brave/Chrome port
+  Based on Firefox addon by M-Reimer (https://github.com/M-Reimer/undoclosetab)
+  GPL-3.0
 */
 "use strict";
 
+const ACTION_MENU_TOP_LEVEL_LIMIT = 6;
 
-// Fired if the toolbar button is clicked.
-// Restores the last closed tab in list.
-async function ToolbarButtonClicked(tab, OnClickData) {
-  // Get list of closed tabs and exit if there are none
+async function ToolbarButtonClicked() {
   const tabs = await TabHandling.GetLastClosedTabs(false, true);
-  if (!tabs.length)
-    return;
+  if (!tabs.length) return;
 
-  // Always restore the most recently closed tab
   await TabHandling.Restore(tabs[0].sessionId);
 
-  // Next, run over the tabs and also restore all tabs closed "with the last
-  // closed one" (to mass-restore "close to the right" or "close others")
   const prefs = await Storage.get();
   if (prefs.restoreGroup && tabs[0]._tabCloseTime) {
     for (let ti = 1; ti < tabs.length; ti++) {
-      if (!tabs[ti]._tabCloseTime)
-        break;
-
-      if (tabs[ti - 1]._tabCloseTime - tabs[ti]._tabCloseTime < prefs.groupTime)
+      if (!tabs[ti]._tabCloseTime) break;
+      if (tabs[ti - 1]._tabCloseTime - tabs[ti]._tabCloseTime < prefs.groupTime) {
         await TabHandling.Restore(tabs[ti].sessionId);
-      else
+      } else {
         break;
+      }
     }
   }
-
-  // Allow to restore in background with shift+click on the toolbar button
-  if (OnClickData.modifiers.includes("Shift"))
-    browser.tabs.update(tab.id, {active: true});
 }
 
-// Helper function used to create menu entries based on tab properties
-function TabMenuProperties(tab, id_prefix) {
+function tabMenuProperties(tab, idPrefix) {
   return {
-    id: id_prefix + ":" + tab.sessionId,
-    title: tab.title.replace(/&/g, "&&"),
-    icons: {18: tab.favIconUrl || "icons/no-favicon.svg"}
-  }
+    id: idPrefix + ":" + tab.sessionId,
+    title: tab.title ? tab.title.replace(/&/g, "&&") : "(No title)",
+    contexts: ["browser_action"]
+  };
 }
 
-// Fired if a menu is shown
-// Updates the context menu entries with the list of last closed tabs.
-var lastMenuInstanceId = 0;
-var nextMenuInstanceId = 1;
-async function OnMenuShown() {
-  var menuInstanceId = nextMenuInstanceId++;
-  lastMenuInstanceId = menuInstanceId;
+async function rebuildContextMenu() {
+  try {
+    const prefs = await Storage.get();
+    const tabs = await TabHandling.GetLastClosedTabs(prefs.showNumber, prefs.onlyCurrent);
+    const maxAllowed = ACTION_MENU_TOP_LEVEL_LIMIT - (prefs.showClearList ? 1 : 0);
 
-  const prefs = await Storage.get();
-  const tabs = await TabHandling.GetLastClosedTabs(prefs.showNumber, prefs.onlyCurrent);
+    await new Promise((resolve) => chrome.contextMenus.removeAll(resolve));
 
-  // How many items are allowed on the top level?
-  const max_allowed = browser.menus.ACTION_MENU_TOP_LEVEL_LIMIT - (prefs.showClearList ? 1 : 0);
+    // Always create at least one browser_action item so right-click always shows a menu
+    if (tabs.length > 0) {
+      chrome.contextMenus.create({
+        id: "BA:UndoCloseTab",
+        title: chrome.i18n.getMessage("extensionName") + " (" + tabs.length + ")",
+        contexts: ["browser_action"]
+      });
+    } else {
+      chrome.contextMenus.create({
+        id: "BA:UndoCloseTab",
+        title: chrome.i18n.getMessage("extensionName") + " - " + chrome.i18n.getMessage("no_recent_tabs"),
+        contexts: ["browser_action"]
+      });
+    }
 
-  // Start with a completely empty menu
-  await browser.menus.removeAll();
+    if ((prefs.showTabMenu || prefs.showPageMenu) && tabs.length) {
+    const contexts = [];
+    if (prefs.showTabMenu) contexts.push("tab");
+    if (prefs.showPageMenu) contexts.push("page");
 
-  // This block is for creating the "page" or "tab" context menus.
-  // They are only drawn if at least one tab can be restored.
-  if ((prefs.showTabMenu || prefs.showPageMenu) && tabs.length) {
-    let contexts = [];
-    if (prefs.showTabMenu)
-      contexts.push("tab");
-    if (prefs.showPageMenu)
-      contexts.push("page");
-
-    let rootmenu = browser.menus.create({
+    chrome.contextMenus.create({
       id: "RootMenu",
-      title: browser.i18n.getMessage("page_contextmenu_submenu"),
+      title: chrome.i18n.getMessage("page_contextmenu_submenu"),
       contexts: contexts
     });
 
     tabs.forEach((tab) => {
-      browser.menus.create({
-        ...TabMenuProperties(tab, "PM"),
+      chrome.contextMenus.create({
+        id: "PM:" + tab.sessionId,
+        title: tab.title ? tab.title.replace(/&/g, "&&") : "(No title)",
         contexts: contexts,
-        parentId: rootmenu
+        parentId: "RootMenu"
       });
     });
 
     if (prefs.showClearList) {
-      browser.menus.create({
-        id: "ClearListSeparator",
-        type: "separator",
-        contexts: contexts,
-        parentId: rootmenu
-      });
-      browser.menus.create({
+      chrome.contextMenus.create({
         id: "PM:ClearList",
-        title: browser.i18n.getMessage("clearlist_menuitem"),
+        title: chrome.i18n.getMessage("clearlist_menuitem"),
         contexts: contexts,
-        parentId: rootmenu
+        parentId: "RootMenu"
       });
     }
   }
 
   if (prefs.showPageMenuitem) {
-    browser.menus.create({
+    chrome.contextMenus.create({
       id: "UndoCloseTab",
-      title: browser.i18n.getMessage("extensionName"),
+      title: chrome.i18n.getMessage("extensionName"),
       contexts: ["page"]
     });
   }
 
-  // If closed tabs count is less or equal maximum allowed menu entries, then
-  // no "More items" menu is needed.
-  if (tabs.length <= max_allowed) {
-    tabs.forEach((tab) => {
-      browser.menus.create({
-        ...TabMenuProperties(tab, "BA"),
+    if (tabs.length <= maxAllowed) {
+      tabs.forEach((tab) => {
+        chrome.contextMenus.create(tabMenuProperties(tab, "BA"));
+      });
+    } else {
+      tabs.slice(0, maxAllowed - 1).forEach((tab) => {
+        chrome.contextMenus.create(tabMenuProperties(tab, "BA"));
+      });
+      chrome.contextMenus.create({
+        id: "MoreClosedTabs",
+        title: chrome.i18n.getMessage("more_entries_menu"),
         contexts: ["browser_action"]
       });
-    });
-  }
-  // If there are too much items, place "maximum - 1" items to the top level
-  // and place the rest of them into a submenu.
-  else {
-    tabs.splice(0, max_allowed - 1).forEach((tab) => {
-      browser.menus.create({
-        ...TabMenuProperties(tab, "BA"),
+      tabs.forEach((tab) => {
+        chrome.contextMenus.create({
+          id: "BA:" + tab.sessionId,
+          title: tab.title ? tab.title.replace(/&/g, "&&") : "(No title)",
+          contexts: ["browser_action"],
+          parentId: "MoreClosedTabs"
+        });
+      });
+    }
+
+    if (tabs.length && prefs.showClearList) {
+      chrome.contextMenus.create({
+        id: "BA:ClearList",
+        title: chrome.i18n.getMessage("clearlist_menuitem"),
         contexts: ["browser_action"]
       });
-    });
-
-    let moreMenu = browser.menus.create({
-      id: "MoreClosedTabs",
-      title: browser.i18n.getMessage("more_entries_menu"),
-      icons: {18: "icons/folder.svg"},
-      contexts: ["browser_action"]
-    });
-
-    tabs.forEach((tab) => {
-      browser.menus.create({
-        ...TabMenuProperties(tab, "BA"),
-        contexts: ["browser_action"],
-        parentId: moreMenu
-      });
-    });
+    }
+  } catch (e) {
+    console.error("Undo Close Tab: rebuildContextMenu failed", e);
   }
-
-  if (tabs.length && prefs.showClearList) {
-    browser.menus.create({
-      id: "BA:ClearList",
-      title: browser.i18n.getMessage("clearlist_menuitem"),
-      contexts: ["browser_action"],
-    });
-  }
-
-  // This is how Mozilla describes how to prevent race conditions.
-  if (menuInstanceId !== lastMenuInstanceId) {
-    return; // Menu was closed and shown again.
-  }
-  await browser.menus.refresh();
 }
 
-// Fired if one of our context menu entries is clicked.
-// Restores the tab, referenced by this context menu entry.
-async function ContextMenuClicked(aInfo) {
-  if (aInfo.menuItemId == "UndoCloseTab") {
+async function contextMenuClicked(info) {
+  if (info.menuItemId === "UndoCloseTab" || info.menuItemId === "BA:UndoCloseTab") {
     await ToolbarButtonClicked();
     return;
   }
-  if (aInfo.menuItemId.endsWith("ClearList")) {
+  if (String(info.menuItemId).endsWith("ClearList")) {
     const prefs = await Storage.get();
-    TabHandling.ClearList(prefs.onlyCurrent);
+    await TabHandling.ClearList(prefs.onlyCurrent);
+    rebuildContextMenu();
     return;
   }
-
-  const sessionid = aInfo.menuItemId.substring(aInfo.menuItemId.indexOf(":") + 1);
-  TabHandling.Restore(sessionid);
+  const idx = String(info.menuItemId).indexOf(":");
+  if (idx >= 0) {
+    const sessionId = String(info.menuItemId).substring(idx + 1);
+    if (sessionId !== "ClearList") {
+      await TabHandling.Restore(sessionId);
+    }
+  }
 }
 
 TabHandling.Init();
 
-//
-// Register event listeners
-//
+chrome.browserAction.onClicked.addListener(() => {
+  ToolbarButtonClicked();
+});
 
-// Check for the API we expect for the "full desktop feature set"
-// This needs revision as soon as there is some Android browser with
-// browser.sessions support.
-if (browser.menus !== undefined &&
-    browser.windows !== undefined &&
-    browser.sessions !== undefined) {
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  contextMenuClicked(info);
+});
 
-  browser.menus.onShown.addListener(OnMenuShown);
-  browser.menus.onClicked.addListener(ContextMenuClicked);
+chrome.sessions.onChanged.addListener(() => {
+  rebuildContextMenu();
+});
 
-  browser.menus.onHidden.addListener(function() {
-    lastMenuInstanceId = 0;
-  });
-}
-
-browser.browserAction.onClicked.addListener(ToolbarButtonClicked);
-
-IconUpdater.Init("icons/undoclosetab.svg");
+// Defer so listeners are registered first; catch errors so script doesn't crash
+setTimeout(() => rebuildContextMenu(), 0);

@@ -13,4 +13,18 @@
 body {
   background-color: var(--page-bg-color);
   color: var(--page-fg-color);
+  font-family: system-ui, sans-serif;
+  padding: 1em;
+}
+
+h2 {
+  margin-top: 1.2em;
+}
+
+p {
+  margin: 0.6em 0;
+}
+
+input[type="number"] {
+  width: 4em;
 }

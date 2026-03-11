@@ -2,25 +2,16 @@
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
   "version": "8.1.0",
-
   "description": "__MSG_extensionDescription__",
 
-  "applications": {
-    "gecko": {
-      "id": "{4853d046-c5a3-436b-bc36-220fd935ee1d}",
-      "strict_min_version": "60.0"
-    }
-  },
-
   "icons": {
-    "24": "icons/undoclosetab.svg",
-    "32": "icons/undoclosetab.svg",
-    "50": "icons/undoclosetab.svg"
+    "24": "icons/undoclosetab-24.png",
+    "32": "icons/undoclosetab-32.png",
+    "48": "icons/undoclosetab-48.png"
   },
 
   "background": {
     "scripts": [
-      "utils/iconupdater.js",
       "utils/storage.js",
       "tabhandling.js",
       "background.js"
@@ -28,33 +19,25 @@
   },
 
   "browser_action": {
-    "browser_style": true,
-    "default_icon": "icons/undoclosetab.svg",
-    "default_area": "navbar",
-    "theme_icons": [{
-      "dark": "icons/undoclosetab.svg",
-      "light": "icons/undoclosetab-light.svg",
-      "size": 19
-    }]
+    "default_icon": {
+      "24": "icons/undoclosetab-24.png",
+      "32": "icons/undoclosetab-32.png"
+    },
+    "default_title": "__MSG_extensionName__",
+    "default_popup": "popup.html"
   },
 
   "options_ui": {
     "page": "options.html",
-    "browser_style": true,
     "open_in_tab": false
   },
 
-  "commands": {
-    "_execute_browser_action": {
-    }
-  },
-
   "permissions": [
-    "menus",
+    "contextMenus",
     "tabs",
     "sessions",
     "storage",
-    "theme"
+    "windows"
   ],
 
   "default_locale": "en"

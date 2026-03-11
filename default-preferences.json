@@ -1,5 +1,4 @@
 {
-//  "showNumber": browser.sessions.MAX_SESSION_RESULTS,
   "showNumber": 25,
   "showTabMenu": false,
   "showPageMenu": false,

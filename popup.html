@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 320px;
+      min-height: 120px;
+      max-height: 400px;
+      margin: 0;
+      padding: 8px;
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+    }
+    h2 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .restore-btn {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      background: #4a7fd4;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .restore-btn:hover {
+      background: #3a6fc4;
+    }
+    .restore-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      max-height: 300px;
+    }
+    li {
+      padding: 8px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    li:hover {
+      background: #e8e8e8;
+    }
+    .empty {
+      color: #666;
+      padding: 12px 0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="title">Undo Close Tab</h2>
+  <button class="restore-btn" id="restoreLast">Restore last closed tab</button>
+  <ul id="list"></ul>
+  <p class="empty" id="empty" style="display:none;">No recently closed tabs</p>
+  <script src="popup.js"></script>
+</body>
+</html>
