@@ -17,7 +17,7 @@
   <h2 data-i18n="contextmenus_headline">Context menus</h2>
   <p>
     <span data-i18n="menuitem_number_label">Number of items shown on closed tabs menu:</span>
-    <input type="number" id="showNumber_inputbox" min="1" max="25" value="25">
+    <input type="number" id="showNumber_inputbox" min="1" max="25" value="25" title="Maximum 25 (browser limit)">
   </p>
   <p>
     <label>
@@ -52,6 +52,9 @@
     </label>
   </p>
 
+  <p class="footer" style="margin-top: 2em; font-size: 12px; color: #666;">
+    By <a href="https://github.com/AlexRabbit" target="_blank" rel="noopener">AlexRabbit</a>
+  </p>
   <script src="utils/storage.js"></script>
   <script src="options.js"></script>
 </body>

@@ -1,9 +1,12 @@
 "use strict";
 
+const MAX_LIST_ITEMS = 25; // Chrome sessions API maximum
+const NO_FAVICON_URL = chrome.runtime.getURL("icons/no-favicon.svg");
+
 document.getElementById("title").textContent = chrome.i18n.getMessage("extensionName");
 document.getElementById("restoreLast").textContent = chrome.i18n.getMessage("extensionName");
 
-chrome.sessions.getRecentlyClosed({}, (sessions) => {
+chrome.sessions.getRecentlyClosed({ maxResults: MAX_LIST_ITEMS }, (sessions) => {
   const tabSessions = sessions.filter((s) => s.tab);
   const listEl = document.getElementById("list");
   const emptyEl = document.getElementById("empty");
@@ -17,11 +20,25 @@ chrome.sessions.getRecentlyClosed({}, (sessions) => {
   }
 
   emptyEl.style.display = "none";
+  listEl.style.display = "block";
   tabSessions.forEach((s) => {
     const tab = s.tab;
     const title = tab.title || tab.url || "(No title)";
+    const faviconUrl = tab.favIconUrl || NO_FAVICON_URL;
+
     const li = document.createElement("li");
-    li.textContent = title;
+    const img = document.createElement("img");
+    img.className = "favicon";
+    img.src = faviconUrl;
+    img.alt = "";
+    img.onerror = () => { img.src = NO_FAVICON_URL; };
+
+    const span = document.createElement("span");
+    span.className = "label";
+    span.textContent = title;
+
+    li.appendChild(img);
+    li.appendChild(span);
     li.title = tab.url || "";
     li.addEventListener("click", () => {
       chrome.sessions.restore(tab.sessionId, () => window.close());
