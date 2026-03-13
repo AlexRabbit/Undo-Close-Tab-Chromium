@@ -1,3 +1,5 @@
+If this helped you, consider starring the repo ⭐
+
 <p align="center">
   <img src="icons/undoclosetab-48.png" width="80" alt="Undo Close Tab icon">
 </p>
@@ -106,4 +108,5 @@ Licensed under **GPL-3.0** in line with the original project.
 [GPL-3.0](LICENSE) — same as the original [undoclosetab](https://github.com/M-Reimer/undoclosetab) repository.
 
 ---
+
 
